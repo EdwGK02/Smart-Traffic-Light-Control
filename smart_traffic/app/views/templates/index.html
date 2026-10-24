@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ project }} · Etapa 1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero__inner">
+    <div class="signal" aria-hidden="true">
+      <span class="signal__light signal__light--red"></span>
+      <span class="signal__light signal__light--yellow"></span>
+      <span class="signal__light signal__light--green"></span>
+    </div>
+    <div>
+      <p class="eyebrow">Proyecto de Inteligencia Artificial</p>
+      <h1>{{ project }}</h1>
+      <p class="hero__sub">IA que ajusta la luz verde al tráfico real · Santiago · Erick · León · Edward</p>
+    </div>
+  </div>
+  <nav class="stages">
+    <span class="stage stage--active"><b>1</b> Agrupar patrones</span>
+    <span class="stage"><b>2</b> Predecir congestión</span>
+    <span class="stage"><b>3</b> Decidir la luz verde</span>
+  </nav>
+</header>
+
+<main class="container">
+
+  <!-- Estado -------------------------------------------------------- -->
+  <section class="status" id="status">
+    <div class="status__item"><span class="dot" id="st-model"></span> Modelo <b id="st-model-txt">—</b></div>
+    <div class="status__item"><span class="dot" id="st-kaggle"></span> Kaggle <b id="st-kaggle-txt">—</b></div>
+    <div class="status__item"><span class="dot" id="st-bogota"></span> Bogotá CGT <b id="st-bogota-txt">—</b></div>
+    <div class="status__item status__item--muted" id="st-trained"></div>
+  </section>
+
+  <div class="grid-2">
+    <!-- Datos ------------------------------------------------------- -->
+    <section class="card">
+      <h2><span class="num">A</span> Subir datos</h2>
+      <p class="hint">Sube el CSV de Kaggle (<code>traffic.csv</code>) o el de Conteo Vehículos CGT de Bogotá. Se guarda en <code>data/raw/</code>.</p>
+      <form id="upload-form" class="form">
+        <label>Fuente
+          <select name="source">
+            <option value="kaggle">Kaggle · Traffic Prediction Dataset</option>
+            <option value="bogota">Bogotá · Conteo Vehículos CGT</option>
+          </select>
+        </label>
+        <label class="file">
+          <input type="file" name="file" accept=".csv,.xlsx,.xls" required>
+          <span class="file__label" id="file-label">Elegir archivo…</span>
+        </label>
+        <button type="submit" class="btn btn--ghost">Subir archivo</button>
+        <p class="msg" id="upload-msg"></p>
+      </form>
+    </section>
+
+    <!-- Entrenar ---------------------------------------------------- -->
+    <section class="card">
+      <h2><span class="num">B</span> Entrenar clustering</h2>
+      <p class="hint">K-Means agrupa cada hora según hora del día, día de la semana, carga relativa y tendencia. Con k automático se elige el de mejor silhouette.</p>
+      <form id="train-form" class="form">
+        <div class="row">
+          <label>Datos
+            <select name="source">
+              <option value="kaggle">Kaggle</option>
+              <option value="bogota">Bogotá CGT</option>
+              <option value="both">Ambos</option>
+            </select>
+          </label>
+          <label>Número de clusters (k)
+            <select name="k">
+              <option value="auto">Automático</option>
+              <option>3</option><option>4</option><option>5</option>
+              <option>6</option><option>7</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" class="btn" id="train-btn">Entrenar modelo</button>
+        <p class="msg" id="train-msg"></p>
+      </form>
+    </section>
+  </div>
+
+  <!-- Resultados -------------------------------------------------- -->
+  <section class="card" id="results" hidden>
+    <h2><span class="num">C</span> Momentos encontrados</h2>
+    <div class="metrics" id="metrics"></div>
+    <div class="table-wrap">
+      <table class="table" id="profiles">
+        <thead>
+          <tr>
+            <th>Momento</th><th>% de horas</th><th>Vehículos prom.</th>
+            <th>Carga relativa</th><th>Tendencia</th><th>Fin de semana</th><th>Horas típicas</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <h3>Gráficas</h3>
+    <div class="plots" id="plots"></div>
+  </section>
+
+  <!-- Predecir ---------------------------------------------------- -->
+  <section class="card" id="predict-card">
+    <h2><span class="num">D</span> ¿En qué momento está la intersección?</h2>
+    <div class="grid-2 grid-2--tight">
+      <form id="predict-form" class="form">
+        <div class="row">
+          <label>Intersección
+            <select name="junction" id="junction-select" required>
+              <option value="">Entrena primero</option>
+            </select>
+          </label>
+          <label>Fecha y hora
+            <input type="datetime-local" name="datetime" step="3600" required>
+          </label>
+        </div>
+        <div class="row">
+          <label>Vehículos en esa hora
+            <input type="number" name="vehicles" min="0" step="1" placeholder="Ej. 90" required>
+          </label>
+          <label>Horas anteriores <small>(opcional)</small>
+            <input type="text" name="prev" placeholder="Ej. 40, 70">
+          </label>
+        </div>
+        <button type="submit" class="btn">Clasificar</button>
+        <p class="msg" id="predict-msg"></p>
+      </form>
+
+      <div class="result" id="predict-result">
+        <div class="result__empty">El resultado aparecerá aquí.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">Smart Traffic Light Control · Etapa 1 · Flask + scikit-learn</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
